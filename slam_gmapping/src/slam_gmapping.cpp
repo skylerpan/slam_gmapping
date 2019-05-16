@@ -95,7 +95,7 @@ void SlamGmapping::startLiveSlam() {
     entropy_publisher_ = this->create_publisher<std_msgs::msg::Float64>("entropy");
     sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map");
     sstm_ = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata");
-    pose_publisher_ = this->create_publisher<geometry_msgs::PoseWithCovarianceStamped>("pose");
+    pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pose");
     scan_filter_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>
             (node_, "scan");
     scan_filter_ = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>
@@ -366,19 +366,22 @@ void SlamGmapping::laserCallback(sensor_msgs::msg::LaserScan::ConstSharedPtr sca
         q.setRPY(0, 0, mpose.theta);
         tf2::Transform laser_to_map = tf2::Transform(q, tf2::Vector3(mpose.x, mpose.y, 0.0)).inverse();
 
-        // publish latest pose with regards to map frame
+        // update latest pose with regards to map frame
         {
-          PoseWithCovarianceStamped p;
+          std::lock_guard<std::mutex> g(map_to_odom_mutex_);
+          geometry_msgs::msg::PoseWithCovarianceStamped& p = latestPose_;
           p.header.stamp = now();
           p.header.frame_id = map_frame_;
 
-          p.pose.position.x = mpose.x
-          p.pose.position.y = mpose.y
-          p.pose.position.z = 0.0;
+          p.pose.pose.position.x = mpose.x;
+          p.pose.pose.position.y = mpose.y;
+          p.pose.pose.position.z = 0.0;
 
-          p.pose.orientation = q;
-
-          pose_publisher_->publish(p);
+          const auto v =  q.getAxis();
+          p.pose.pose.orientation.x = v[0];
+          p.pose.pose.orientation.y = v[1];
+          p.pose.pose.orientation.z = v[2];
+          p.pose.pose.orientation.w = q.getW();
         }
 
 
@@ -524,6 +527,10 @@ void SlamGmapping::updateMap(const sensor_msgs::msg::LaserScan::ConstSharedPtr s
 void SlamGmapping::publishTransform()
 {
     map_to_odom_mutex_.lock();
+
+    // publish the latest pose
+    pose_publisher_->publish(latestPose_);
+
     rclcpp::Time tf_expiration = get_clock()->now() + rclcpp::Duration(
             static_cast<int32_t>(static_cast<rcl_duration_value_t>(tf_delay_)), 0);
     geometry_msgs::msg::TransformStamped transform;

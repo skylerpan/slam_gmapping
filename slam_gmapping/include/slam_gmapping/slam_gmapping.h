@@ -34,6 +34,7 @@
 #include "nav_msgs/msg/map_meta_data.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_ros/transform_listener.h"
@@ -63,7 +64,7 @@ private:
     rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr entropy_publisher_;
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr sst_;
     rclcpp::Publisher<nav_msgs::msg::MapMetaData>::SharedPtr sstm_;
-    rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr pose_publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pose_publisher_;
 
     std::shared_ptr<tf2_ros::Buffer> buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tfl_;
@@ -148,6 +149,9 @@ private:
 
     double transform_publish_period_;
     double tf_delay_;
+
+    // latest pose in the map frame
+    geometry_msgs::msg::PoseWithCovarianceStamped latestPose_;
 };
 
 #endif //SLAM_GMAPPING_SLAM_GMAPPING_H_

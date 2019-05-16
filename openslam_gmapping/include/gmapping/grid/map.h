@@ -259,7 +259,6 @@ Map<double, DoubleArray2D, false>* Map<Cell,Storage,isClass>::toDoubleMap() cons
 	return plainMap;
 }
 
-};
+}
 
 #endif
-

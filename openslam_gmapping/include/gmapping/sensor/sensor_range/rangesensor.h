@@ -30,6 +30,6 @@ class RangeSensor: public Sensor{
 		std::vector<Beam> m_beams;
 };
 
-};
+}
 
 #endif

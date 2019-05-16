@@ -49,7 +49,7 @@ void toLogForm(OutputIterator& out, const Iterator & begin, const Iterator & end
 template <class WeightVector>
 void resample(std::vector<int>& indexes, const WeightVector& weights, unsigned int nparticles=0){
 	double cweight=0;
-	
+
 	//compute the cumulative weights
 	unsigned int n=0;
 	for (typename WeightVector::const_iterator it=weights.begin(); it!=weights.end(); ++it){
@@ -59,7 +59,7 @@ void resample(std::vector<int>& indexes, const WeightVector& weights, unsigned i
 
 	if (nparticles>0)
 		n=nparticles;
-	
+
 	//compute the interval
 	double interval=cweight/n;
 
@@ -69,7 +69,7 @@ void resample(std::vector<int>& indexes, const WeightVector& weights, unsigned i
 
 	cweight=0;
 	indexes.resize(n);
-	
+
 	n=0;
 	unsigned int i=0;
 	for (typename WeightVector::const_iterator it=weights.begin(); it!=weights.end(); ++it, ++i){
@@ -164,7 +164,7 @@ std::vector<unsigned int> uniform_resampler<Particle, Numeric>:: resampleIndexes
 
 	if (nparticles>0)
 		n=nparticles;
-	
+
 	//compute the interval
 	Numeric interval=cweight/n;
 
@@ -200,7 +200,7 @@ std::vector<Particle> uniform_resampler<Particle,Numeric>::resample
 
 	if (nparticles>0)
 		n=nparticles;
-	
+
 	//weight of the particles after resampling
 	double uw=1./n;
 

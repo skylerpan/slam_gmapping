@@ -18,7 +18,7 @@ class Sensor{
 
 typedef std::map<std::string, Sensor*> SensorMap;
 
-}; //end namespace
+} //end namespace
 
 #endif
 

@@ -20,7 +20,5 @@ class SensorReading{
 
 };
 
-}; //end namespace
+} // end namespace
 #endif
-
-

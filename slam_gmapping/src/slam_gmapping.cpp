@@ -95,6 +95,7 @@ void SlamGmapping::startLiveSlam() {
     entropy_publisher_ = this->create_publisher<std_msgs::msg::Float64>("entropy");
     sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map");
     sstm_ = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata");
+    pose_publisher_ = this->create_publisher<geometry_msgs::PoseWithCovarianceStamped>("pose");
     scan_filter_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>
             (node_, "scan");
     scan_filter_ = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>
@@ -364,6 +365,23 @@ void SlamGmapping::laserCallback(sensor_msgs::msg::LaserScan::ConstSharedPtr sca
         tf2::Quaternion q;
         q.setRPY(0, 0, mpose.theta);
         tf2::Transform laser_to_map = tf2::Transform(q, tf2::Vector3(mpose.x, mpose.y, 0.0)).inverse();
+
+        // publish latest pose with regards to map frame
+        {
+          PoseWithCovarianceStamped p;
+          p.header.stamp = now();
+          p.header.frame_id = map_frame_;
+
+          p.pose.position.x = mpose.x
+          p.pose.position.y = mpose.y
+          p.pose.position.z = 0.0;
+
+          p.pose.orientation = q;
+
+          pose_publisher_->publish(p);
+        }
+
+
         q.setRPY(0, 0, odom_pose.theta);
         tf2::Transform odom_to_laser = tf2::Transform(q, tf2::Vector3(odom_pose.x, odom_pose.y, 0.0));
 

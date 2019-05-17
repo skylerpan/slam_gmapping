@@ -107,7 +107,7 @@ std::error_code SlamGmapping::initParameters()
     xmax_              = parameters_client_->get_parameter("xmax", 10.0);
     ymax_              = parameters_client_->get_parameter("ymax", 10.0);
     delta_             = parameters_client_->get_parameter("delta", 0.05);
-    occ_thresh_        = parameters_client_->get_parameter("occ", 0.25);
+    occ_thresh_        = parameters_client_->get_parameter("occ_thresh", 0.25);
     llsamplerange_     = parameters_client_->get_parameter("llsamplerange", 0.01);
     llsamplestep_      = parameters_client_->get_parameter("llsamplestep", 0.01);
     lasamplerange_     = parameters_client_->get_parameter("lasamplerange", 0.005);

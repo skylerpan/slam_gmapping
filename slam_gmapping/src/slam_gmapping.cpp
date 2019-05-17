@@ -22,6 +22,7 @@
 //
 
 #include "slam_gmapping/slam_gmapping.h"
+using namespace std::chrono_literals;
 
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
 
@@ -40,69 +41,94 @@ SlamGmapping::SlamGmapping():
     tfB_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
     map_to_odom_.setIdentity();
     seed_ = static_cast<unsigned long>(time(nullptr));
-    init();
-    startLiveSlam();
 }
 
-void SlamGmapping::init() {
+std::error_code SlamGmapping::init() {
     gsp_ = new GMapping::GridSlamProcessor();
 
+    // variables initialisation
     gsp_laser_ = nullptr;
     gsp_odom_ = nullptr;
     got_first_scan_ = false;
     got_map_ = false;
 
     throttle_scans_ = 1;
-    base_frame_ = "base_link";
-    map_frame_ = "map";
-    odom_frame_ = "odom";
-    transform_publish_period_ = 0.05;
-
     map_update_interval_ = tf2::durationFromSec(0.5);
-    maxUrange_ = 80.0;  maxRange_ = 0.0;
-    minimum_score_ = 0;
-    sigma_ = 0.05;
-    kernelSize_ = 1;
-    lstep_ = 0.05;
-    astep_ = 0.05;
-    iterations_ = 5;
-    lsigma_ = 0.075;
-    ogain_ = 3.0;
-    lskip_ = 0;
-    srr_ = 0.1;
-    srt_ = 0.2;
-    str_ = 0.1;
-    stt_ = 0.2;
-    linearUpdate_ = 1.0;
-    angularUpdate_ = 0.5;
-    temporalUpdate_ = 1.0;
-    resampleThreshold_ = 0.5;
-    particles_ = 30;
-    xmin_ = -10.0;
-    ymin_ = -10.0;
-    xmax_ = 10.0;
-    ymax_ = 10.0;
-    delta_ = 0.05;
-    occ_thresh_ = 0.25;
-    llsamplerange_ = 0.01;
-    llsamplestep_ = 0.01;
-    lasamplerange_ = 0.005;
-    lasamplestep_ = 0.005;
-    tf_delay_ = transform_publish_period_;
+
+    // ROS parameters initialisation
+    const auto ec = initParameters();
+    if (ec) { return ec; }
+
+    return std::error_code();
+} // end of init
+
+
+std::error_code SlamGmapping::initParameters()
+{
+    parameters_client_ = std::make_unique<rclcpp::SyncParametersClient>(node_);
+
+    // Query and initialise gmapping parameters
+    while (!parameters_client_->wait_for_service(1s)) {
+        if (!rclcpp::ok()) {
+            RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
+            return std::make_error_code(std::errc::io_error);
+        }
+        RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...");
+    }
+
+    // frames
+    base_frame_ = parameters_client_->get_parameter<std::string>("base_frame", "base_link");
+    map_frame_  = parameters_client_->get_parameter<std::string>("map_frame", "map");
+    odom_frame_ = parameters_client_->get_parameter<std::string>("odom_frame", "odom");
+
+    // various parameters
+    maxUrange_         = parameters_client_->get_parameter("maxUrange", 80.0);
+    maxRange_          = parameters_client_->get_parameter("maxRange", 0.0);
+    minimum_score_     = parameters_client_->get_parameter("minimum_score", 0);
+    sigma_             = parameters_client_->get_parameter("sigma", 0.05);
+    kernelSize_        = parameters_client_->get_parameter("kernelSize", 1);
+    lstep_             = parameters_client_->get_parameter("lstep", 0.05);
+    astep_             = parameters_client_->get_parameter("astep", 0.05);
+    iterations_        = parameters_client_->get_parameter("iterations", 5);
+    lsigma_            = parameters_client_->get_parameter("lsigma", 0.075);
+    ogain_             = parameters_client_->get_parameter("ogain", 3.0);
+    lskip_             = parameters_client_->get_parameter("lskip", 0);
+    srr_               = parameters_client_->get_parameter("srr", 0.1);
+    srt_               = parameters_client_->get_parameter("srt", 0.2);
+    str_               = parameters_client_->get_parameter("str", 0.1);
+    stt_               = parameters_client_->get_parameter("stt", 0.2);
+    linearUpdate_      = parameters_client_->get_parameter("linearUpdate", 1.0);
+    angularUpdate_     = parameters_client_->get_parameter("angularUpdate", 0.5);
+    temporalUpdate_    = parameters_client_->get_parameter("temporalUpdate", 1.0);
+    resampleThreshold_ = parameters_client_->get_parameter("resampleThreshold", 0.5);
+    particles_         = parameters_client_->get_parameter("particles", 30);
+    xmin_              = parameters_client_->get_parameter("xmin", -10.0);
+    ymin_              = parameters_client_->get_parameter("ymin", -10.0);
+    xmax_              = parameters_client_->get_parameter("xmax", 10.0);
+    ymax_              = parameters_client_->get_parameter("ymax", 10.0);
+    delta_             = parameters_client_->get_parameter("delta", 0.05);
+    occ_thresh_        = parameters_client_->get_parameter("occ", 0.25);
+    llsamplerange_     = parameters_client_->get_parameter("llsamplerange", 0.01);
+    llsamplestep_      = parameters_client_->get_parameter("llsamplestep", 0.01);
+    lasamplerange_     = parameters_client_->get_parameter("lasamplerange", 0.005);
+    lasamplestep_      = parameters_client_->get_parameter("lasamplestep", 0.005);
+
+    return std::error_code();
 }
 
-void SlamGmapping::startLiveSlam() {
+std::error_code SlamGmapping::startLiveSlam() {
     entropy_publisher_ = this->create_publisher<std_msgs::msg::Float64>("entropy");
     sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map");
     sstm_ = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata");
     pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pose");
-    scan_filter_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>
-            (node_, "scan");
+    scan_filter_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>(node_, "scan");
     scan_filter_ = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>
             (*scan_filter_sub_, *buffer_, odom_frame_, 10, node_);
     scan_filter_->registerCallback(std::bind(&SlamGmapping::laserCallback, this, std::placeholders::_1));
     transform_thread_ = std::make_shared<std::thread>
             (std::bind(&SlamGmapping::publishLoop, this, transform_publish_period_));
+
+    return std::error_code();
 }
 
 void SlamGmapping::publishLoop(double transform_publish_period){
@@ -110,7 +136,7 @@ void SlamGmapping::publishLoop(double transform_publish_period){
         return;
     rclcpp::Rate r(1.0 / transform_publish_period);
     while (rclcpp::ok()) {
-        publishTransform();
+        doPublish();
         r.sleep();
     }
 }
@@ -524,12 +550,24 @@ void SlamGmapping::updateMap(const sensor_msgs::msg::LaserScan::ConstSharedPtr s
     map_mutex_.unlock();
 }
 
-void SlamGmapping::publishTransform()
+void SlamGmapping::doPublish()
 {
-    map_to_odom_mutex_.lock();
+    publishTransform();
+    publishLatestPose();
+}
+
+void SlamGmapping::publishLatestPose()
+{
+    std::lock_guard<std::mutex> g(map_to_odom_mutex_);
 
     // publish the latest pose
     pose_publisher_->publish(latestPose_);
+}
+
+void SlamGmapping::publishTransform()
+{
+    std::lock_guard<std::mutex> g(map_to_odom_mutex_);
+
 
     rclcpp::Time tf_expiration = get_clock()->now() + rclcpp::Duration(
             static_cast<int32_t>(static_cast<rcl_duration_value_t>(tf_delay_)), 0);
@@ -544,14 +582,42 @@ void SlamGmapping::publishTransform()
     catch (tf2::LookupException& te){
         RCLCPP_INFO(this->get_logger(), te.what());
     }
-    map_to_odom_mutex_.unlock();
 }
 
-int main(int argc, char* argv[])
+static rclcpp::Logger logger = rclcpp::get_logger("main");
+
+int main(int argc, char* argv[]) try
 {
     rclcpp::init(argc, argv);
 
     auto slam_gmapping_node = std::make_shared<SlamGmapping>();
+    {
+        const auto ec = slam_gmapping_node->init();
+        if (ec)
+        {
+            RCLCPP_ERROR(logger, "%s / %s / %s", ec.category().name(), ec.value(), ec.message());
+            return -1;
+        }
+    }
+    {
+        const auto ec = slam_gmapping_node->startLiveSlam();
+        if (ec)
+        {
+            RCLCPP_ERROR(logger, "%s / %s / %s", ec.category().name(), ec.value(), ec.message());
+            return -1;
+        }
+    }
+
     rclcpp::spin(slam_gmapping_node);
-    return(0);
+    return 0;
+}
+catch(const std::exception& e)
+{
+    RCLCPP_FATAL(logger, "%s%s\n\n", "Finished with a known exception:", e.what());
+    return -1;
+}
+catch(...)
+{
+    RCLCPP_FATAL(logger, "%s", "Uncaught unknown exception!\n");
+    return -1;
 }

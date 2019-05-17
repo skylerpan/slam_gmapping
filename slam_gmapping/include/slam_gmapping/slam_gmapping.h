@@ -23,6 +23,7 @@
 #ifndef SLAM_GMAPPING_SLAM_GMAPPING_H_
 #define SLAM_GMAPPING_SLAM_GMAPPING_H_
 
+#include <system_error>
 #include <mutex>
 #include <thread>
 #include <memory>
@@ -53,13 +54,17 @@ public:
     SlamGmapping();
     ~SlamGmapping() override;
 
-    void init();
-    void startLiveSlam();
+    std::error_code init();
+    std::error_code startLiveSlam();
+    void doPublish();
+    void publishLatestPose();
     void publishTransform();
     void laserCallback(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);
     void publishLoop(double transform_publish_period);
 
 private:
+    std::error_code initParameters();
+
     rclcpp::Node::SharedPtr node_;
     rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr entropy_publisher_;
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr sst_;
@@ -102,15 +107,17 @@ private:
     std::shared_ptr<std::thread> transform_thread_;
 
     std::string base_frame_;
-    std::string laser_frame_;
     std::string map_frame_;
     std::string odom_frame_;
+    std::string laser_frame_;
 
     void updateMap(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);
     bool getOdomPose(GMapping::OrientedPoint& gmap_pose, const rclcpp::Time& t);
     bool initMapper(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);
     bool addScan(sensor_msgs::msg::LaserScan::ConstSharedPtr scan, GMapping::OrientedPoint& gmap_pose);
     double computePoseEntropy();
+
+    std::unique_ptr<rclcpp::SyncParametersClient> parameters_client_;
 
     // Parameters used by GMapping
     double maxRange_;
@@ -147,8 +154,8 @@ private:
 
     unsigned long int seed_;
 
-    double transform_publish_period_;
-    double tf_delay_;
+    double transform_publish_period_ = 0.05;
+    double tf_delay_ = transform_publish_period_;
 
     // latest pose in the map frame
     geometry_msgs::msg::PoseWithCovarianceStamped latestPose_;

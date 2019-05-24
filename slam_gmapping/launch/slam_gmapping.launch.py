@@ -49,6 +49,8 @@ def generate_launch_description():
         *launch_args,
         launch.actions.DeclareLaunchArgument(name="pose_topic",
                                              default_value="/pose"),
+        launch.actions.DeclareLaunchArgument(name="map_topic",
+                                             default_value="/map"),
         launch_ros.actions.Node(
             package='slam_gmapping',
             node_executable='slam_gmapping',
@@ -56,18 +58,8 @@ def generate_launch_description():
             parameters=[{k: launch.substitutions.LaunchConfiguration(k)
                          for k, _ in config_vars }],
             remappings=[("/pose",
-                         launch.substitutions.LaunchConfiguration("pose_topic"))]
+                         launch.substitutions.LaunchConfiguration("pose_topic")),
+                        ("/map",
+                         launch.substitutions.LaunchConfiguration("map_topic"))]
         ),
     ])
-
-
-    # launch.actions.DeclareLaunchArgument(
-    #     'maxUrange', default_value='false', description='Use simulation (Gazebo) clock if true'),
-
-    # return LaunchDescription([
-    #     launch_ros.actions.Node(
-    #         package='slam_gmapping',
-    #         node_executable='slam_gmapping',
-    #         node_name='slam_gmapping', output='screen',
-    #         parameters=[{'maxUrange': maxUrange}]),
-    # ])

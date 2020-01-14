@@ -25,6 +25,12 @@
 
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
 
+#define LOAD_PARAMS(_name_,_val_) \
+   this->declare_parameter((#_name_),(_val_),\
+      rcl_interfaces::msg::ParameterDescriptor());\
+   this->get_parameter(#_name_, _name_##_);\
+   std::cout<<(#_name_)<<" "<< _name_##_ << "\n"
+
 using std::placeholders::_1;
 
 SlamGmapping::SlamGmapping():
@@ -88,6 +94,51 @@ void SlamGmapping::init() {
     llsamplestep_ = 0.01;
     lasamplerange_ = 0.005;
     lasamplestep_ = 0.005;
+    double mui;
+    this->declare_parameter("map_update_interval",mui,
+        rcl_interfaces::msg::ParameterDescriptor());
+    map_update_interval_ = tf2::durationFromSec(mui);
+
+    LOAD_PARAMS(got_first_scan, false);
+    LOAD_PARAMS(got_map, false);
+    LOAD_PARAMS(throttle_scans, 1);
+    LOAD_PARAMS(base_frame, "base_link");
+    LOAD_PARAMS(map_frame, "map");
+    LOAD_PARAMS(odom_frame, "odom");
+    LOAD_PARAMS(transform_publish_period, 0.05);
+
+    //LOAD_PARAMS(map_update_interval, 0.5);
+    LOAD_PARAMS(maxUrange, 80.0);
+    LOAD_PARAMS(maxRange, 0.0);
+    LOAD_PARAMS(minimum_score, 0.0);
+    LOAD_PARAMS(sigma, 0.05);
+    LOAD_PARAMS(kernelSize, 1);
+    LOAD_PARAMS(lstep, 0.05);
+    LOAD_PARAMS(astep, 0.05);
+    LOAD_PARAMS(iterations, 5);
+    LOAD_PARAMS(lsigma, 0.075);
+    LOAD_PARAMS(ogain, 3.0);
+    LOAD_PARAMS(lskip, 0);
+    LOAD_PARAMS(srr, 0.1);
+    LOAD_PARAMS(srt, 0.2);
+    LOAD_PARAMS(str, 0.1);
+    LOAD_PARAMS(stt, 0.2);
+    LOAD_PARAMS(linearUpdate, 1.0);
+    LOAD_PARAMS(angularUpdate, 0.5);
+    LOAD_PARAMS(temporalUpdate, 1.0);
+    LOAD_PARAMS(resampleThreshold, 0.5);
+    LOAD_PARAMS(particles, 30);
+    LOAD_PARAMS(xmin, -10.0);
+    LOAD_PARAMS(ymin, -10.0);
+    LOAD_PARAMS(xmax, 10.0);
+    LOAD_PARAMS(ymax, 10.0);
+    LOAD_PARAMS(delta, 0.05);
+    LOAD_PARAMS(occ_thresh, 0.25);
+    LOAD_PARAMS(llsamplerange, 0.01);
+    LOAD_PARAMS(llsamplestep, 0.01);
+    LOAD_PARAMS(lasamplerange, 0.005);
+    LOAD_PARAMS(lasamplestep, 0.005);
+
     tf_delay_ = transform_publish_period_;
 }
 

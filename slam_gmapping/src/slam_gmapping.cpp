@@ -28,8 +28,8 @@
 #define LOAD_PARAMS(_name_,_val_) \
    this->declare_parameter((#_name_),(_val_),\
       rcl_interfaces::msg::ParameterDescriptor());\
-   this->get_parameter(#_name_, _name_##_);\
-   std::cout<<(#_name_)<<" "<< _name_##_ << "\n"
+   this->get_parameter((#_name_), (_name_##_));\
+   std::cout<<(#_name_)<<" "<<(_name_##_)<<std::endl
 
 using std::placeholders::_1;
 
@@ -94,10 +94,12 @@ void SlamGmapping::init() {
     llsamplestep_ = 0.01;
     lasamplerange_ = 0.005;
     lasamplestep_ = 0.005;
-    double mui;
-    this->declare_parameter("map_update_interval",mui,
-        rcl_interfaces::msg::ParameterDescriptor());
-    map_update_interval_ = tf2::durationFromSec(mui);
+
+    double mui_fsec = 0.5;
+    this->declare_parameter("map_update_interval", mui_fsec,
+      rcl_interfaces::msg::ParameterDescriptor());
+    this->get_parameter("map_update_interval", mui_fsec);
+    map_update_interval_ = tf2::durationFromSec(mui_fsec);
 
     LOAD_PARAMS(got_first_scan, false);
     LOAD_PARAMS(got_map, false);

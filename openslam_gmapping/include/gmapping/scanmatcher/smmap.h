@@ -9,7 +9,7 @@ namespace GMapping {
 
 struct PointAccumulator{
 	typedef point<float> FloatPoint;
-	/* before 
+	/* before
 	PointAccumulator(int i=-1): acc(0,0), n(0), visits(0){assert(i==-1);}
 	*/
 	/*after begin*/
@@ -30,8 +30,8 @@ struct PointAccumulator{
 void PointAccumulator::update(bool value, const Point& p){
 	if (value) {
 		acc.x+= static_cast<float>(p.x);
-		acc.y+= static_cast<float>(p.y); 
-		n++; 
+		acc.y+= static_cast<float>(p.y);
+		n++;
 		visits+=SIGHT_INC;
 	} else
 		visits++;
@@ -49,6 +49,6 @@ double PointAccumulator::entropy() const{
 
 typedef Map<PointAccumulator,HierarchicalArray2D<PointAccumulator> > ScanMatcherMap;
 
-};
+}
 
-#endif 
+#endif

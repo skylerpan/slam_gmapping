@@ -11,10 +11,9 @@ class OdometrySensor: public Sensor{
 		OdometrySensor(const std::string& name, bool ideal=false);
 		inline bool isIdeal() const { return m_ideal; }
 	protected:
-		bool m_ideal;	
+		bool m_ideal;
 };
 
-};
+}
 
 #endif
-

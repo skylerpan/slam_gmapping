@@ -14,5 +14,5 @@ class SensorReading{
 		const Sensor* m_sensor;
 };
 
-}; //end namespace
+} //end namespace
 #endif

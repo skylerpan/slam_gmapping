@@ -7,7 +7,7 @@ namespace GMapping{
 template <class X>
 class autoptr{
 	protected:
-	
+
 	public:
 	struct reference{
 		X* data;
@@ -20,7 +20,7 @@ class autoptr{
 		inline operator int() const;
 		inline X& operator*();
 		inline const X& operator*() const;
-		//p	
+		//p
 		reference * m_reference;
 	protected:
 };
@@ -55,11 +55,11 @@ autoptr<X>& autoptr<X>::operator=(const autoptr<X>& ap){
 		delete m_reference->data;
 		delete m_reference;
 		m_reference=0;
-	}	
+	}
 	if (ref){
 		m_reference=ref;
 		m_reference->shares++;
-	} 
+	}
 //20050802 nasty changes begin
 	else
 		m_reference=0;
@@ -73,7 +73,7 @@ autoptr<X>::~autoptr(){
 		delete m_reference->data;
 		delete m_reference;
 		m_reference=0;
-	}	
+	}
 }
 
 template <class X>
@@ -93,5 +93,5 @@ const X& autoptr<X>::operator*() const{
 	return *(m_reference->data);
 }
 
-};
+}
 #endif

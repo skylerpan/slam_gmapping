@@ -76,5 +76,4 @@ Covariance3 MotionModel::gaussianApproximation(const OrientedPoint& pnew, const 
 	return cov;
 }
 
-};
-
+}

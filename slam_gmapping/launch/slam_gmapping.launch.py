@@ -5,7 +5,7 @@ import launch_ros.actions
 def generate_launch_description():
     param_substitutions = {
         'base_frame': 'base_link',
-        'odom_frame': 'base_odom',
+        'odom_frame': 'odom',
         'map_frame': 'map',
         'map_update_interval': '3.0',
         'maxUrange': '10.0',

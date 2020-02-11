@@ -107,9 +107,9 @@ private:
     std::shared_ptr<std::thread> transform_thread_;
 
     std::string base_frame_;
+    std::string laser_frame_;
     std::string map_frame_;
     std::string odom_frame_;
-    std::string laser_frame_;
 
     void updateMap(sensor_msgs::msg::LaserScan::ConstSharedPtr scan);
     bool getOdomPose(GMapping::OrientedPoint& gmap_pose, const rclcpp::Time& t);

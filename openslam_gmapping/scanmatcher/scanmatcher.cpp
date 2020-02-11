@@ -30,14 +30,14 @@ ScanMatcher::ScanMatcher(): m_laserPose(0,0,0){
 	m_linearOdometryReliability=0.;
 	m_freeCellRatio=sqrt(2.);
 	m_initialBeamsSkip=0;
-
-/*
+	
+/*	
 	// This  are the dafault settings for a grid map of 10 cm
 	m_llsamplerange=0.1;
 	m_llsamplestep=0.1;
 	m_lasamplerange=0.02;
 	m_lasamplestep=0.01;
-*/
+*/	
 	// This  are the dafault settings for a grid map of 20/25 cm
 /*
 	m_llsamplerange=0.2;
@@ -76,10 +76,10 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 				continue;
 			if (d>m_usableRange)
 				d=m_usableRange;
-
+			
 			Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
 			IntPoint p1=map.world2map(phit);
-
+			
 			d+=map.getDelta();
 			//Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
 			//IntPoint p2=map.world2map(phit2);
@@ -105,7 +105,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 			IntPoint cp=map.storage().patchIndexes(p1);
 			assert(cp.x>=0 && cp.y>=0);
 			activeArea.insert(cp);
-
+			
 		}
 	//this allocates the unallocated cells in the active area of the map
 	//cout << "activeArea::size() " << activeArea.size() << endl;
@@ -121,15 +121,15 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 	lp.y+=sin(p.theta)*m_laserPose.x+cos(p.theta)*m_laserPose.y;
 	lp.theta+=m_laserPose.theta;
 	IntPoint p0=map.world2map(lp);
-
+	
 	Point min(map.map2world(0,0));
 	Point max(map.map2world(map.getMapSizeX()-1,map.getMapSizeY()-1));
-
+	       
 	if (lp.x<min.x) min.x=lp.x;
 	if (lp.y<min.y) min.y=lp.y;
 	if (lp.x>max.x) max.x=lp.x;
 	if (lp.y>max.y) max.y=lp.y;
-
+	
 	/*determine the size of the area*/
 	const double * angle=m_laserAngles+m_initialBeamsSkip;
 	for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++){
@@ -145,7 +145,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 	}
 	//min=min-Point(map.getDelta(),map.getDelta());
 	//max=max+Point(map.getDelta(),map.getDelta());
-
+	
 	if ( !map.isInside(min)	|| !map.isInside(max)){
 		Point lmin(map.map2world(0,0));
 		Point lmax(map.map2world(map.getMapSizeX()-1,map.getMapSizeY()-1));
@@ -158,7 +158,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 		map.resize(min.x, min.y, max.x, max.y);
 		//cerr << "RESIZE " << min.x << " " << min.y << " " << max.x << " " << max.y << endl;
 	}
-
+	
 	HierarchicalArray2D<PointAccumulator>::PointSet activeArea;
 	/*allocate the active area*/
 	angle=m_laserAngles+m_initialBeamsSkip;
@@ -172,7 +172,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 			Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
 			IntPoint p0=map.world2map(lp);
 			IntPoint p1=map.world2map(phit);
-
+			
 			//IntPoint linePoints[20000] ;
 			GridLineTraversalLine line;
 			line.points=m_linePoints;
@@ -198,16 +198,16 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 			assert(cp.x>=0 && cp.y>=0);
 			activeArea.insert(cp);
 		}
-
+	
 	//this allocates the unallocated cells in the active area of the map
 	//cout << "activeArea::size() " << activeArea.size() << endl;
-/*
+/*	
 	cerr << "ActiveArea=";
 	for (HierarchicalArray2D<PointAccumulator>::PointSet::const_iterator it=activeArea.begin(); it!= activeArea.end(); it++){
 		cerr << "(" << it->x <<"," << it->y << ") ";
 	}
 	cerr << endl;
-*/
+*/		
 	map.storage().setActiveArea(activeArea, true);
 	m_activeAreaComputed=true;
 }
@@ -215,17 +215,17 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
 double ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p, const double* readings){
 	if (!m_activeAreaComputed)
 		computeActiveArea(map, p, readings);
-
+		
 	//this operation replicates the cells that will be changed in the registration operation
 	map.storage().allocActiveArea();
-
+	
 	OrientedPoint lp=p;
 	lp.x+=cos(p.theta)*m_laserPose.x-sin(p.theta)*m_laserPose.y;
 	lp.y+=sin(p.theta)*m_laserPose.x+cos(p.theta)*m_laserPose.y;
 	lp.theta+=m_laserPose.theta;
 	IntPoint p0=map.world2map(lp);
-
-
+	
+	
 	const double * angle=m_laserAngles+m_initialBeamsSkip;
 	double esum=0;
 	for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++)
@@ -271,10 +271,10 @@ double ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p, co
 void ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p, const double* readings){
 	if (!m_activeAreaComputed)
 		computeActiveArea(map, p, readings);
-
+		
 	//this operation replicates the cells that will be changed in the registration operation
 	map.storage().allocActiveArea();
-
+	
 	OrientedPoint lp=p;
 	lp.x+=cos(p.theta)*m_laserPose.x-sin(p.theta)*m_laserPose.y;
 	lp.y+=sin(p.theta)*m_laserPose.x+cos(p.theta)*m_laserPose.y;
@@ -282,7 +282,7 @@ void ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p, cons
 	IntPoint p0=map.world2map(lp);
 	const double * angle=m_laserAngles;
 	for (const double* r=readings; r<readings+m_laserBeams; r++, angle++)
-		if (m_generateMap){
+		if (m_generateMap){	
 			double d=*r;
 			if (d>m_laserMaxRange)
 				continue;
@@ -290,7 +290,7 @@ void ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p, cons
 				d=m_usableRange;
 			Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
 			IntPoint p1=map.world2map(phit);
-
+			
 			IntPoint linePoints[20000] ;
 			GridLineTraversalLine line;
 			line.points=linePoints;
@@ -302,7 +302,7 @@ void ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p, cons
 				map.cell(line.points[i]).update(false, Point(0,0));
 			}
 			if (d<=m_usableRange){
-
+				
 				map.cell(p1).update(true,phit);
 			}
 		} else {
@@ -389,7 +389,7 @@ double ScanMatcher::optimize(OrientedPoint& pnew, const ScanMatcherMap& map, con
 					break;
 				default:;
 			}
-
+			
 			double odo_gain=1;
 			if (m_angularOdometryReliability>0.){
 				double dth=init.theta-localPose.theta; 	dth=atan2(sin(dth), cos(dth)); 	dth*=dth;
@@ -402,7 +402,7 @@ double ScanMatcher::optimize(OrientedPoint& pnew, const ScanMatcherMap& map, con
 				odo_gain*=exp(-m_linearOdometryReliability*drho);
 			}
 			double localScore=odo_gain*score(map, localPose, readings);
-
+			
 			if (localScore>currentScore){
 				currentScore=localScore;
 				bestLocalPose=localPose;
@@ -482,7 +482,7 @@ double ScanMatcher::optimize(OrientedPoint& _mean, ScanMatcher::CovarianceMatrix
 				default:;
 			}
 			double localScore, localLikelihood;
-
+			
 			double odo_gain=1;
 			if (m_angularOdometryReliability>0.){
 				double dth=init.theta-localPose.theta; 	dth=atan2(sin(dth), cos(dth)); 	dth*=dth;
@@ -514,7 +514,7 @@ double ScanMatcher::optimize(OrientedPoint& _mean, ScanMatcher::CovarianceMatrix
 	}while (currentScore>bestScore || refinement<m_optRecursiveIterations);
 	//cout << __PRETTY_FUNCTION__ << "bestScore=" << bestScore<< endl;
 	//cout << __PRETTY_FUNCTION__ << "iterations=" << count<< endl;
-
+	
 	//normalize the likelihood
 	double lmin=1e9;
 	double lmax=-1e9;
@@ -549,7 +549,7 @@ double ScanMatcher::optimize(OrientedPoint& _mean, ScanMatcher::CovarianceMatrix
 		cov.yt+=delta.y*delta.theta*it->likelihood;
 	}
 	cov.xx/=lacc, cov.xy/=lacc, cov.xt/=lacc, cov.yy/=lacc, cov.yt/=lacc, cov.tt/=lacc;
-
+	
 	_mean=currentPose;
 	_cov=cov;
 	return bestScore;
@@ -564,30 +564,30 @@ void ScanMatcher::setLaserParameters
 	m_laserPose=lpose;
 	m_laserBeams=beams;
 	//m_laserAngles=new double[beams];
-	memcpy(m_laserAngles, angles, sizeof(double)*m_laserBeams);
+	memcpy(m_laserAngles, angles, sizeof(double)*m_laserBeams);	
 }
-
+	
 
 double ScanMatcher::likelihood
 	(double& _lmax, OrientedPoint& _mean, CovarianceMatrix& _cov, const ScanMatcherMap& map, const OrientedPoint& p, const double* readings){
 	ScoredMoveList moveList;
-
+	
 	for (double xx=-m_llsamplerange; xx<=m_llsamplerange; xx+=m_llsamplestep)
 	for (double yy=-m_llsamplerange; yy<=m_llsamplerange; yy+=m_llsamplestep)
 	for (double tt=-m_lasamplerange; tt<=m_lasamplerange; tt+=m_lasamplestep){
-
+		
 		OrientedPoint rp=p;
 		rp.x+=xx;
 		rp.y+=yy;
 		rp.theta+=tt;
-
+		
 		ScoredMove sm;
 		sm.pose=rp;
-
+		
 		likelihoodAndScore(sm.score, sm.likelihood, map, rp, readings);
 		moveList.push_back(sm);
 	}
-
+	
 	//OrientedPoint delta=mean-currentPose;
 	//cout << "delta.x=" << delta.x << " delta.y=" << delta.y << " delta.theta=" << delta.theta << endl;
 	//normalize the likelihood
@@ -602,7 +602,7 @@ double ScanMatcher::likelihood
 		it->likelihood=exp(it->likelihood-lmax);
 		//cout << "l=" << it->likelihood << endl;
 	}
-
+	
 	OrientedPoint mean(0,0,0);
 	double s=0,c=0;
 	for (ScoredMoveList::const_iterator it=moveList.begin(); it!=moveList.end(); it++){
@@ -614,8 +614,8 @@ double ScanMatcher::likelihood
 	s/=lcum;
 	c/=lcum;
 	mean.theta=atan2(s,c);
-
-
+	
+	
 	CovarianceMatrix cov={0.,0.,0.,0.,0.,0.};
 	for (ScoredMoveList::const_iterator it=moveList.begin(); it!=moveList.end(); it++){
 		OrientedPoint delta=it->pose-mean;
@@ -628,7 +628,7 @@ double ScanMatcher::likelihood
 		cov.yt+=delta.y*delta.theta*it->likelihood;
 	}
 	cov.xx/=lcum, cov.xy/=lcum, cov.xt/=lcum, cov.yy/=lcum, cov.yt/=lcum, cov.tt/=lcum;
-
+	
 	_mean=mean;
 	_cov=cov;
 	_lmax=lmax;
@@ -639,26 +639,26 @@ double ScanMatcher::likelihood
 	(double& _lmax, OrientedPoint& _mean, CovarianceMatrix& _cov, const ScanMatcherMap& map, const OrientedPoint& p,
 	Gaussian3& odometry, const double* readings, double gain){
 	ScoredMoveList moveList;
-
-
+	
+	
 	for (double xx=-m_llsamplerange; xx<=m_llsamplerange; xx+=m_llsamplestep)
 	for (double yy=-m_llsamplerange; yy<=m_llsamplerange; yy+=m_llsamplestep)
 	for (double tt=-m_lasamplerange; tt<=m_lasamplerange; tt+=m_lasamplestep){
-
+		
 		OrientedPoint rp=p;
 		rp.x+=xx;
 		rp.y+=yy;
 		rp.theta+=tt;
-
+		
 		ScoredMove sm;
 		sm.pose=rp;
-
+		
 		likelihoodAndScore(sm.score, sm.likelihood, map, rp, readings);
 		sm.likelihood+=odometry.eval(rp)/gain;
 		assert(!isnan(sm.likelihood));
 		moveList.push_back(sm);
 	}
-
+	
 	//OrientedPoint delta=mean-currentPose;
 	//cout << "delta.x=" << delta.x << " delta.y=" << delta.y << " delta.theta=" << delta.theta << endl;
 	//normalize the likelihood
@@ -673,7 +673,7 @@ double ScanMatcher::likelihood
 		it->likelihood=exp(it->likelihood-lmax);
 		//cout << "l=" << it->likelihood << endl;
 	}
-
+	
 	OrientedPoint mean(0,0,0);
 	double s=0,c=0;
 	for (ScoredMoveList::const_iterator it=moveList.begin(); it!=moveList.end(); it++){
@@ -685,8 +685,8 @@ double ScanMatcher::likelihood
 	s/=lcum;
 	c/=lcum;
 	mean.theta=atan2(s,c);
-
-
+	
+	
 	CovarianceMatrix cov={0.,0.,0.,0.,0.,0.};
 	for (ScoredMoveList::const_iterator it=moveList.begin(); it!=moveList.end(); it++){
 		OrientedPoint delta=it->pose-mean;
@@ -699,7 +699,7 @@ double ScanMatcher::likelihood
 		cov.yt+=delta.y*delta.theta*it->likelihood;
 	}
 	cov.xx/=lcum, cov.xy/=lcum, cov.xt/=lcum, cov.yy/=lcum, cov.yt/=lcum, cov.tt/=lcum;
-
+	
 	_mean=mean;
 	_cov=cov;
 	_lmax=lmax;
@@ -709,7 +709,7 @@ double ScanMatcher::likelihood
 }
 
 void ScanMatcher::setMatchingParameters
-	(double urange, double range, double sigma, int kernsize, double lopt, double aopt, int iterations,  double likelihoodSigma, unsigned int likelihoodSkip){
+	(double urange, double range, double sigma, int kernsize, double lopt, double aopt, int iterations,  double likelihoodSigma, unsigned int likelihoodSkip){	
 	m_usableRange=urange;
 	m_laserMaxRange=range;
 	m_kernelSize=kernsize;
@@ -721,4 +721,5 @@ void ScanMatcher::setMatchingParameters
 	m_likelihoodSkip=likelihoodSkip;
 }
 
-}
+};
+

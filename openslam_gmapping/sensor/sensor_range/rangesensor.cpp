@@ -27,4 +27,4 @@ void RangeSensor::updateBeamsLookup(){
 	}
 }
 
-}
+};

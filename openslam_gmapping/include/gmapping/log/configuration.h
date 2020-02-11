@@ -12,5 +12,6 @@ class Configuration{
 		virtual SensorMap computeSensorMap() const=0;
 };
 
-}
+};
 #endif
+

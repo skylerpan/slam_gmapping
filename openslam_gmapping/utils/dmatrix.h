@@ -228,5 +228,5 @@ template <class X> std::ostream& operator<<(std::ostream& os, const DMatrix<X> &
 	return os << "}";
 }
 
-} //namespace GMapping 
+}; //namespace GMapping 
 #endif

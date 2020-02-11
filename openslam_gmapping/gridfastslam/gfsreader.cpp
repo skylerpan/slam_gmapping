@@ -501,6 +501,6 @@ void RecordList::printPath(ostream& os, unsigned int i, bool err, bool rawodom) 
 		cout << "average error" << totalError/count << endl;
 }
 
-} //gfsreader
+}; //gfsreader
 
-} //GMapping;
+}; //GMapping;

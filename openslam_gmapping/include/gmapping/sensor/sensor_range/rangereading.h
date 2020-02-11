@@ -21,6 +21,6 @@ class RangeReading: public SensorReading, public std::vector<double>{
 		OrientedPoint m_pose;
 };
 
-}
+};
 
 #endif

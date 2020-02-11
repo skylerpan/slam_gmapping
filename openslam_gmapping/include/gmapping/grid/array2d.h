@@ -182,6 +182,7 @@ inline Cell& Array2D<Cell,debug>::cell(int x, int y){
 	return m_cells[x][y];
 }
 
-}
+};
 
 #endif
+

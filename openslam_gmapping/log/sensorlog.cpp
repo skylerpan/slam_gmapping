@@ -24,33 +24,33 @@ istream& SensorLog::load(istream& is){
 	for (iterator it=begin(); it!=end(); it++)
 		if (*it) delete (*it);
 	clear();
-
+	
 	char buf[LINEBUFFER_SIZE];
 	while (is){
 		is.getline(buf, LINEBUFFER_SIZE);
 		istringstream lis(buf);
-
+		
 		string sensorname;
-
-		if (lis)
-			lis >>sensorname;
-		else
+		
+		if (lis) 
+			lis >>sensorname; 
+		else 
 			continue;
-
-
-
+		
+		
+			
 		SensorMap::const_iterator it=m_sensorMap.find(sensorname);
 		if (it==m_sensorMap.end()){
 			continue;
 		}
-
+		
 		Sensor* sensor=it->second;
-
+		
 		SensorReading* reading=0;
 		OdometrySensor* odometry=dynamic_cast<OdometrySensor*>(sensor);
 		if (odometry)
 			reading=parseOdometry(lis, odometry);
-
+		
 		RangeSensor* range=dynamic_cast<RangeSensor*>(sensor);
 		if (range)
 			reading=parseRange(lis, range);
@@ -58,7 +58,7 @@ istream& SensorLog::load(istream& is){
 			push_back(reading);
 	}
 	return is;
-
+	
 }
 
 OdometryReading* SensorLog::parseOdometry(istream& is, const OdometrySensor* osen) const{
@@ -80,11 +80,11 @@ RangeReading* SensorLog::parseRange(istream& is, const RangeSensor* rs) const{
 		string laser_type, start_angle, field_of_view, angular_resolution, maximum_range, accuracy, remission_mode;
 		is >> laser_type>> start_angle>> field_of_view>> angular_resolution>> maximum_range>> accuracy >> remission_mode;
 	}
-
+	
 	unsigned int size;
 	is >> size;
 	assert(size==rs->beams().size());
-
+	
 	RangeReading* reading=new RangeReading(rs);
 	//cerr << "#R=" << size << endl;
 	reading->resize(size);
@@ -102,7 +102,7 @@ RangeReading* SensorLog::parseRange(istream& is, const RangeSensor* rs) const{
 	OrientedPoint laserPose;
 	is >> laserPose.x >> laserPose.y >> laserPose.theta;
 	OrientedPoint pose;
-	is >> pose.x >> pose.y >> pose.theta;
+	is >> pose.x >> pose.y >> pose.theta; 
 	reading->setPose(pose);
 	double a,b,c;
 	if (rs->newFormat){
@@ -131,14 +131,14 @@ OrientedPoint SensorLog::boundingBox(double& xmin, double& ymin, double& xmax, d
 			lxmin=lxmax=odometry->getPose().x;
 			lymin=lymax=odometry->getPose().y;
 		}
-
+		
 		const RangeReading* rangeReading=dynamic_cast<const RangeReading*> (reading);
 		if (rangeReading){
 			lxmin=lxmax=rangeReading->getPose().x;
 			lymin=lymax=rangeReading->getPose().y;
 			if (first){
 				first=false;
-				start=rangeReading->getPose();
+				start=rangeReading->getPose();	
 			}
 		}
 		xmin=xmin<lxmin?xmin:lxmin;
@@ -149,4 +149,5 @@ OrientedPoint SensorLog::boundingBox(double& xmin, double& ymin, double& xmax, d
 	return start;
 }
 
-}
+};
+

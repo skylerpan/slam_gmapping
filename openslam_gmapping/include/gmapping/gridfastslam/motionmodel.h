@@ -5,7 +5,7 @@
 #include <gmapping/utils/stat.h>
 #include <gmapping/utils/macro_params.h>
 
-namespace  GMapping {
+namespace  GMapping { 
 
 struct MotionModel{
 	OrientedPoint drawFromMotion(const OrientedPoint& p, double linearMove, double angularMove) const;
@@ -14,6 +14,6 @@ struct MotionModel{
 	double srr, str, srt, stt;
 };
 
-}
+};
 
 #endif

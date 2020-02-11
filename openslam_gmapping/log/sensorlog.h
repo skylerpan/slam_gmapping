@@ -24,6 +24,6 @@ class SensorLog : public std::list<SensorReading*>{
 		RangeReading* parseRange(std::istream& is, const RangeSensor* ) const;
 };
 
-}
+};
 
 #endif

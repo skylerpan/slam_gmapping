@@ -142,6 +142,6 @@ Gaussian3 computeGaussianFromSamples(PointIterator& pointBegin, PointIterator& p
 }
 
 
-} //end namespace
+}; //end namespace
 #endif
 

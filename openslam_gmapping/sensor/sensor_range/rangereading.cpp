@@ -110,4 +110,5 @@ std::vector<Point> RangeReading::cartesianForm(double maxRange) const{
 	return cartesianPoints;
 }
 
-}
+};
+

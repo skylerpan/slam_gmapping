@@ -24,5 +24,6 @@ class OdometryReading: public SensorReading{
 		OrientedPoint m_acceleration;
 };
 
-}
+};
 #endif
+

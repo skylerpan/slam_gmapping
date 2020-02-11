@@ -10,4 +10,6 @@ const PointAccumulator& PointAccumulator::Unknown(){
 
 PointAccumulator* PointAccumulator::unknown_ptr=0;
 
-}
+};
+
+

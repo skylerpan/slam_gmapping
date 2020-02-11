@@ -94,8 +94,8 @@ struct RecordList: public list<Record*>{
 	void destroyReferences();
 };
 
-} //end namespace GFSReader
+}; //end namespace GFSReader
 
-} //end namespace GMapping
+}; //end namespace GMapping
 
 #endif

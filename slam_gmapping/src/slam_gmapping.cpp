@@ -123,10 +123,11 @@ std::error_code SlamGmapping::initParameters()
 }
 
 std::error_code SlamGmapping::startLiveSlam() {
-    entropy_publisher_ = this->create_publisher<std_msgs::msg::Float64>("entropy");
-    sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map");
-    sstm_ = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata");
-    pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pose");
+    rclcpp::QoS qos(rclcpp::KeepLast(10), rmw_qos_profile_default);
+    entropy_publisher_ = this->create_publisher<std_msgs::msg::Float64>("entropy", qos);
+    sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map", qos);
+    sstm_ = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata", qos);
+    pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pose", qos);
     scan_filter_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>
             (node_, "scan", rmw_qos_profile_sensor_data);
     scan_filter_ = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>

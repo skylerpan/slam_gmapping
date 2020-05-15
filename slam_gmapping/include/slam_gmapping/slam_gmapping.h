@@ -43,6 +43,7 @@
 #include "tf2/utils.h"
 #include "message_filters/subscriber.h"
 #include "tf2_ros/message_filter.h"
+#include "tf2_ros/create_timer_ros.h"
 
 #include "gmapping/gridfastslam/gridslamprocessor.h"
 #include "gmapping/sensor/sensor_base/sensor.h"
@@ -105,6 +106,8 @@ private:
     int throttle_scans_;
 
     std::shared_ptr<std::thread> transform_thread_;
+
+    std::string scan_topic_;
 
     std::string base_frame_;
     std::string laser_frame_;

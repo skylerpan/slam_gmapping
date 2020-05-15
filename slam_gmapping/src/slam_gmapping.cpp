@@ -26,11 +26,12 @@ using namespace std::chrono_literals;
 
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
 
+#define DUMP_PARAM(_name_,_val_)   std::cout<<(#_name_)<<" "<<(_val_)<<std::endl
 #define LOAD_PARAMS(_name_,_val_) \
    this->declare_parameter((#_name_),(_val_),\
       rcl_interfaces::msg::ParameterDescriptor());\
    this->get_parameter((#_name_), (_name_##_));\
-   std::cout<<(#_name_)<<" "<<(_name_##_)<<std::endl
+   DUMP_PARAM(_name_,_name_##_)
 
 using std::placeholders::_1;
 
@@ -41,7 +42,14 @@ SlamGmapping::SlamGmapping():
     laser_count_(0),
     transform_thread_(nullptr)
 {
-    buffer_ = std::make_shared<tf2_ros::Buffer>(get_clock());
+    double tmp_val = 30.;
+    tmp_val = this->declare_parameter("tf_buffer_duration", tmp_val);
+    buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock(),
+      tf2::durationFromSec(tmp_val));
+    auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
+        get_node_base_interface(),
+        get_node_timers_interface());
+    buffer_->setCreateTimerInterface(timer_interface);
     tfl_ = std::make_shared<tf2_ros::TransformListener>(*buffer_);
     node_ = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node *) {});
     tfB_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_);
@@ -77,6 +85,8 @@ std::error_code SlamGmapping::initParameters()
     this->get_parameter("map_update_interval", mui_fsec);
     map_update_interval_ = tf2::durationFromSec(mui_fsec);
 
+    LOAD_PARAMS(scan_topic, "/scan");
+
     LOAD_PARAMS(got_first_scan, false);
     LOAD_PARAMS(got_map, false);
     LOAD_PARAMS(throttle_scans, 1);
@@ -86,6 +96,7 @@ std::error_code SlamGmapping::initParameters()
     LOAD_PARAMS(transform_publish_period, 0.05);
 
     //LOAD_PARAMS(map_update_interval, 0.5);
+    DUMP_PARAM (map_update_interval, mui_fsec);
     LOAD_PARAMS(maxUrange, 80.0);
     LOAD_PARAMS(maxRange, 0.0);
     LOAD_PARAMS(minimum_score, 0.0);
@@ -123,13 +134,13 @@ std::error_code SlamGmapping::initParameters()
 }
 
 std::error_code SlamGmapping::startLiveSlam() {
-    rclcpp::QoS qos(rclcpp::KeepLast(10), rmw_qos_profile_default);
+    rclcpp::QoS qos(rclcpp::KeepLast(10));
     entropy_publisher_ = this->create_publisher<std_msgs::msg::Float64>("entropy", qos);
-    sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map", qos);
+    sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map", qos.transient_local().reliable());
     sstm_ = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata", qos);
     pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pose", qos);
     scan_filter_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>
-            (node_, "scan", rmw_qos_profile_sensor_data);
+            (node_, scan_topic_, rmw_qos_profile_sensor_data);
     scan_filter_ = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>
             (*scan_filter_sub_, *buffer_, odom_frame_, 10, node_);
     scan_filter_->registerCallback(std::bind(&SlamGmapping::laserCallback, this, std::placeholders::_1));
@@ -578,7 +589,7 @@ void SlamGmapping::publishTransform()
 
 
     rclcpp::Time tf_expiration = get_clock()->now() + rclcpp::Duration(
-            static_cast<int32_t>(static_cast<rcl_duration_value_t>(tf_delay_)), 0);
+            static_cast<int32_t>(static_cast<rcl_duration_value_t>(tf_delay_)), 0.1);
     geometry_msgs::msg::TransformStamped transform;
     transform.header.frame_id = map_frame_;
     transform.header.stamp = tf_expiration;
